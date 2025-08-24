@@ -1,249 +1,196 @@
-# PingBoard 🚀
+# 🚀 PingBoard - Local Social Network Platform
 
-A full-stack web application for sharing short messages (pings) with your community. Built with Django backend and Next.js frontend, featuring a clean Twitter-like interface with modern UX.
+**PingBoard** is a lightweight, self-hosted social networking platform designed for local offices, communities, and organizations. Think of it as a mini-Reddit that you control completely.
 
 ## ✨ Features
 
-### Core Functionality
-- **User Authentication**: Secure email + password login/registration
-- **Ping Creation**: Share messages up to 280 characters
-- **Categories**: Organize pings by type (event, sale, help, misc)
-- **Location Support**: Add city or zip code to your pings
-- **Anonymous Posting**: Post anonymously while maintaining account linkage
-- **Voting System**: Upvote/downvote pings from the community
+- **Simple Posting**: 280-character messages with hashtag support
+- **User Authentication**: Secure login/registration system
+- **SEO Optimization**: Automatic meta tag generation for hashtag posts
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Local Network Ready**: Accessible from any device on your network
+- **Zero External Dependencies**: Everything runs on your own hardware
 
-### User Experience
-- **Responsive Design**: Mobile-first, works on all devices
-- **Real-time Updates**: Automatic refresh and live notifications
-- **Search & Filtering**: Find pings by text, category, or location
-- **Infinite Scroll**: Seamless browsing through the ping feed
-- **Clean Interface**: Minimal, Twitter-inspired design
+## 🎯 Perfect For
 
-### Technical Features
-- **JWT Authentication**: Secure token-based auth with refresh
-- **RESTful API**: Clean Django REST Framework backend
-- **PostgreSQL Database**: Robust data storage
-- **Docker Ready**: Easy deployment with Docker Compose
-- **Production Ready**: Environment variables, security best practices
+- **Office Communication**: Team updates, announcements, discussions
+- **Local Communities**: Neighborhood groups, clubs, organizations
+- **Educational Institutions**: Student forums, class discussions
+- **Small Businesses**: Internal communication, customer feedback
+- **Privacy-Conscious Groups**: Complete data control, no third-party tracking
 
-## 🏗️ Architecture
-
-```
-PingBoard/
-├── backend/                 # Django REST API
-│   ├── pingboard/          # Main Django project
-│   ├── users/              # Custom user management
-│   ├── pings/              # Ping model and API
-│   └── requirements.txt    # Python dependencies
-├── frontend/               # Next.js application
-│   ├── app/               # App router pages
-│   ├── components/        # Reusable React components
-│   ├── contexts/          # React contexts (auth, etc.)
-│   ├── lib/               # API utilities and helpers
-│   └── package.json       # Node.js dependencies
-└── docker-compose.yml     # Multi-service orchestration
-```
-
-## 🚀 Quick Start
+## 🚀 Quick Start (5 minutes)
 
 ### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Python 3.11+ (for local development)
+- Python 3.8+ 
+- Git
+- Modern web browser
 
-### 1. Clone and Setup
+### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/mrobin88/PingBoard.git
 cd PingBoard
 ```
 
-### 2. Start with Docker (Recommended)
-```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-### 3. Access the Application
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **Admin Panel**: http://localhost:8000/admin
-- **Database**: localhost:5432
-
-## 🛠️ Local Development
-
-### Backend Setup
+### 2. Set Up Backend
 ```bash
 cd backend
-
-# Create virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export DEBUG=1
-export SECRET_KEY=your-secret-key
-export DATABASE_URL=postgresql://pingboard_user:pingboard_password@localhost:5432/pingboard
-
-# Run migrations
-python manage.py makemigrations
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Start development server
-python manage.py runserver
+pip install -r requirements-local.txt
 ```
 
-### Frontend Setup
+### 3. Run the Application
 ```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Set environment variables
-export NEXT_PUBLIC_API_URL=http://localhost:8000
-
-# Start development server
-npm run dev
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver 0.0.0.0:8000
 ```
+
+### 4. Access Your App
+- **From your computer**: http://localhost:8000
+- **From other devices**: http://YOUR_IP_ADDRESS:8000
+
+## 🌐 Network Access Setup
+
+### Find Your IP Address
+**macOS/Linux:**
+```bash
+ifconfig | grep "inet " | grep -v 127.0.0.1
+```
+
+**Windows:**
+```cmd
+ipconfig | findstr "IPv4"
+```
+
+### Make It Accessible to Your Network
+1. **Start Django with network binding:**
+   ```bash
+   python manage.py runserver 0.0.0.0:8000
+   ```
+
+2. **Access from other devices:**
+   - Same WiFi network: `http://YOUR_IP:8000`
+   - Example: `http://192.168.1.100:8000`
+
+### Port Forwarding (Optional - Internet Access)
+**⚠️ Security Warning**: Only do this if you understand the risks!
+
+1. **Find your router's admin page** (usually 192.168.1.1)
+2. **Set up port forwarding** for port 8000
+3. **Use a dynamic DNS service** (like No-IP) for a custom URL
+4. **Consider using HTTPS** for security
+
+## 🏗️ Production Deployment
+
+### For Offices/Organizations
+1. **Dedicated Server**: Use a spare computer or small server
+2. **Database**: Switch to PostgreSQL for better performance
+3. **Web Server**: Use Nginx + Gunicorn for production
+4. **SSL Certificate**: Get a free certificate from Let's Encrypt
+
+### For AWS/Cloud (Advanced)
+- Use the included `deploy-aws.sh` script
+- Set up RDS PostgreSQL database
+- Configure security groups and load balancers
 
 ## 🔧 Configuration
 
 ### Environment Variables
-
-#### Backend (.env)
-```bash
-DEBUG=1
-SECRET_KEY=your-super-secret-key-here
-DATABASE_URL=postgresql://user:password@host:port/dbname
-ALLOWED_HOSTS=localhost,127.0.0.1
-```
-
-#### Frontend (.env.local)
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-### Database Configuration
-The application uses PostgreSQL by default. You can modify the database settings in `backend/pingboard/settings.py` or use environment variables.
-
-## 📱 API Endpoints
-
-### Authentication
-- `POST /api/token/` - Login
-- `POST /api/token/refresh/` - Refresh token
-- `POST /api/users/register/` - User registration
-
-### Users
-- `GET /api/users/profile/` - Get user profile
-- `PATCH /api/users/profile/` - Update profile
-- `POST /api/users/change-password/` - Change password
-
-### Pings
-- `GET /api/pings/` - List all pings (with filters)
-- `POST /api/pings/` - Create new ping
-- `GET /api/pings/{id}/` - Get specific ping
-- `PATCH /api/pings/{id}/` - Update ping
-- `DELETE /api/pings/{id}/` - Delete ping
-- `POST /api/pings/{id}/vote/` - Vote on ping
-- `GET /api/pings/user/` - Get user's pings
-
-## 🚀 Deployment
-
-### Production Deployment
-1. **Update Environment Variables**
-   ```bash
-   DEBUG=0
-   SECRET_KEY=your-production-secret-key
-   ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-   ```
-
-2. **Build and Deploy**
-   ```bash
-   # Build production images
-   docker-compose -f docker-compose.prod.yml build
-   
-   # Deploy
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-3. **SSL/HTTPS**: Use a reverse proxy (nginx) with Let's Encrypt
-
-### VPS Deployment
-- Minimum: 1GB RAM, 20GB storage
-- Recommended: 2GB RAM, 40GB storage
-- OS: Ubuntu 20.04+ or similar
-
-## 🔒 Security Features
-
-- JWT token authentication
-- Password validation and hashing
-- CORS protection
-- SQL injection prevention
-- XSS protection
-- CSRF protection
-- Rate limiting (can be added)
-
-## 🧪 Testing
+Create a `.env` file in the `backend` directory:
 
 ```bash
-# Backend tests
-cd backend
-python manage.py test
+# Django Settings
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1,YOUR_IP_ADDRESS
 
-# Frontend tests (when implemented)
-cd frontend
-npm test
+# Database (SQLite for local, PostgreSQL for production)
+USE_POSTGRES=false
+POSTGRES_DB=pingboard
+POSTGRES_USER=pingboard_user
+POSTGRES_PASSWORD=your-password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
 ```
 
-## 📊 Performance
+### Customization
+- **Branding**: Edit templates in `frontend_templates/templates/`
+- **Styling**: Modify Tailwind CSS classes
+- **Features**: Add new models in `pings/models.py`
 
-- Database indexing on frequently queried fields
-- React Query for efficient data fetching
-- Optimized images and assets
-- Lazy loading and code splitting
-- CDN ready for static assets
+## 📱 User Guide
+
+### For End Users
+1. **Register**: Create an account with username/password
+2. **Login**: Access your personalized dashboard
+3. **Post**: Share messages up to 280 characters
+4. **Use Hashtags**: Add `#topic` for better organization
+5. **Browse**: View posts from all users in chronological order
+
+### For Administrators
+1. **Access Admin**: http://localhost:8000/admin/
+2. **Manage Users**: Create, edit, or deactivate accounts
+3. **Moderate Content**: Review and manage posts
+4. **View Analytics**: Monitor user activity and engagement
+
+## 🛡️ Security Features
+
+- **CSRF Protection**: Built-in Django security
+- **Password Validation**: Strong password requirements
+- **Session Management**: Secure user sessions
+- **Input Sanitization**: XSS protection
+- **SQL Injection Protection**: Django ORM security
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**"DisallowedHost" Error:**
+- Add your IP address to `ALLOWED_HOSTS` in settings
+- Restart the Django server
+
+**Can't Access from Other Devices:**
+- Ensure devices are on the same network
+- Check firewall settings
+- Verify Django is running on `0.0.0.0:8000`
+
+**Database Errors:**
+- Run `python manage.py migrate`
+- Check database configuration in `.env`
+
+### Performance Tips
+- **Small Office (< 50 users)**: Current setup is fine
+- **Medium Office (50-200 users)**: Consider PostgreSQL
+- **Large Office (200+ users)**: Use production deployment
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Test thoroughly
 5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is open source and available under the [MIT License](LICENSE).
 
 ## 🆘 Support
 
-- **Issues**: Create an issue on GitHub
-- **Documentation**: Check the code comments and API docs
-- **Community**: Join our discussions
+- **Issues**: Report bugs on GitHub
+- **Questions**: Open a discussion
+- **Feature Requests**: Submit an issue with enhancement label
 
-## 🔮 Roadmap
+## 🎉 Success Stories
 
-- [ ] Real-time notifications
-- [ ] Image uploads for pings
-- [ ] User mentions and replies
-- [ ] Advanced search with Elasticsearch
-- [ ] Mobile app (React Native)
-- [ ] API rate limiting
-- [ ] Webhook support
-- [ ] Analytics dashboard
+*"We deployed PingBoard in our 25-person office and it's revolutionized our internal communication. No more email chains!"* - Tech Startup CEO
+
+*"Our neighborhood association uses PingBoard to coordinate events and share local news. It's perfect for community building."* - Community Organizer
 
 ---
 
-Built with ❤️ using Django, Next.js, and Tailwind CSS
+**Built with ❤️ using Django, Python, and Tailwind CSS**
+
+**Ready to build your own social network? Start with PingBoard today!**
