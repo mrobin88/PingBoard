@@ -59,16 +59,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pingboard.wsgi.application'
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', default='pingboard'),
-        'USER': config('POSTGRES_USER', default='pingboard_user'),
-        'PASSWORD': config('POSTGRES_PASSWORD', default='pingboard_password'),
-        'HOST': config('POSTGRES_HOST', default='db'),
-        'PORT': config('POSTGRES_PORT', default='5432'),
+# Use SQLite for local development, PostgreSQL for production
+if config('USE_POSTGRES', default=False, cast=bool):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('POSTGRES_DB', default='pingboard'),
+            'USER': config('POSTGRES_USER', default='pingboard_user'),
+            'PASSWORD': config('POSTGRES_PASSWORD', default='pingboard_password'),
+            'HOST': config('POSTGRES_HOST', default='db'),
+            'PORT': config('POSTGRES_PORT', default='5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
