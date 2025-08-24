@@ -21,6 +21,8 @@ class Ping(models.Model):
     is_anonymous = models.BooleanField(default=False)
     upvotes = models.ManyToManyField(User, related_name='upvoted_pings', blank=True)
     downvotes = models.ManyToManyField(User, related_name='downvoted_pings', blank=True)
+    hashtags = models.CharField(max_length=500, blank=True)  # Store hashtags for SEO
+    seo_description = models.TextField(blank=True)  # AI-generated SEO description
     
     class Meta:
         ordering = ['-timestamp']

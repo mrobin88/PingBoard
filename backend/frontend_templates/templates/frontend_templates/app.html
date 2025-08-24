@@ -1,0 +1,114 @@
+{% extends 'frontend_templates/base.html' %}
+
+{% block title %}PingBoard - App{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Post Form -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Share Your Ping</h2>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <textarea
+                    name="text"
+                    rows="3"
+                    maxlength="280"
+                    placeholder="What's on your mind? Use #hashtags for better discoverability..."
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    required
+                ></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <p class="text-sm text-gray-500">
+                        <span id="char-count">0</span>/280 characters
+                    </p>
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                        Post Ping
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- User's Pings -->
+    {% if user_pings %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Recent Pings</h3>
+        <div class="space-y-4">
+            {% for ping in user_pings %}
+            <div class="border-l-4 border-blue-500 pl-4 py-2">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="text-gray-900">{{ ping.text }}</p>
+                        {% if ping.hashtags %}
+                        <div class="mt-2">
+                            {% for hashtag in ping.hashtags.split|slice:":5" %}
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2 mb-1">
+                                #{{ hashtag }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <p class="text-sm text-gray-500 mt-2">
+                            {{ ping.timestamp|date:"M j, Y g:i A" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Pings from All Users -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Pings</h3>
+        {% if recent_pings %}
+        <div class="space-y-4">
+            {% for ping in recent_pings %}
+            <div class="border-l-4 border-gray-200 pl-4 py-2">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="text-gray-900">{{ ping.text }}</p>
+                        {% if ping.hashtags %}
+                        <div class="mt-2">
+                            {% for hashtag in ping.hashtags.split|slice:":5" %}
+                            <span class="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mr-2 mb-1">
+                                #{{ hashtag }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="flex items-center mt-2 text-sm text-gray-500">
+                            <span>by {{ ping.user.username }}</span>
+                            <span class="mx-2">•</span>
+                            <span>{{ ping.timestamp|date:"M j, Y g:i A" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No pings yet. Be the first to post!</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Character counter
+document.querySelector('textarea[name="text"]').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('char-count').textContent = count;
+    
+    if (count > 250) {
+        document.getElementById('char-count').classList.add('text-red-500');
+    } else {
+        document.getElementById('char-count').classList.remove('text-red-500');
+    }
+});
+</script>
+{% endblock %}
