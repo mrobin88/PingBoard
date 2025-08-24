@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useMutation, useQueryClient } from 'react-query'
 import { X, MapPin, Tag, EyeOff } from 'lucide-react'
-import api from '../lib/api'
+import api from '@/lib/api'
 import toast from 'react-hot-toast'
 
 interface PingFormData {
