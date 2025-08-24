@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'pings',
     'users',
+    'frontend_templates',
 ]
 
 MIDDLEWARE = [
