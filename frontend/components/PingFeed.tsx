@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 import { ThumbsUp, ThumbsDown, MessageCircle, MapPin, Calendar, User, EyeOff } from 'lucide-react'
-import api from '@/lib/api'
-import { useAuth } from '@/contexts/AuthContext'
+import api from '../lib/api'
+import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 
 interface Ping {
