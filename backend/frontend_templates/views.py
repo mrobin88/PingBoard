@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from pings.models import Ping
+from users.forms import CustomUserCreationForm
 import re
 
 # Create your views here.
@@ -34,14 +34,16 @@ def register_view(request):
         return redirect('app')
         
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get('username')
             messages.success(request, f'Account created for {username}! Please log in.')
             return redirect('login')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'frontend_templates/register.html', {'form': form})
 
 @login_required
