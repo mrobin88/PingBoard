@@ -9,23 +9,23 @@
             <a href="{% url 'home' %}" class="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4">
                 ← Back to PingBoard
             </a>
-            <h2 className="text-3xl font-bold text-gray-900">Create your account</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <h2 class="text-3xl font-bold text-gray-900">Create your account</h2>
+            <p class="mt-2 text-sm text-gray-600">
                 Join PingBoard and start sharing with your community
             </p>
         </div>
     </div>
 
-    <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <form method="post" className="space-y-6">
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <form method="post" class="space-y-6">
                 {% csrf_token %}
                 <!-- Username Input -->
                 <div>
-                    <label for="id_username" className="block text-sm font-medium text-gray-700">
+                    <label for="id_username" class="block text-sm font-medium text-gray-700">
                         Username
                     </label>
-                    <div className="mt-1">
+                    <div class="mt-1">
                         {{ form.username }}
                         {% if form.username.errors %}
                             <p className="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
@@ -35,10 +35,10 @@
 
                 <!-- Password Input -->
                 <div>
-                    <label for="id_password1" className="block text-sm font-medium text-gray-700">
+                    <label for="id_password1" class="block text-sm font-medium text-gray-700">
                         Password
                     </label>
-                    <div className="mt-1">
+                    <div class="mt-1">
                         {{ form.password1 }}
                         {% if form.password1.errors %}
                             <p className="mt-1 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
@@ -48,10 +48,10 @@
 
                 <!-- Confirm Password Input -->
                 <div>
-                    <label for="id_password2" className="block text-sm font-medium text-gray-700">
+                    <label for="id_password2" class="block text-sm font-medium text-gray-700">
                         Confirm Password
                     </label>
-                    <div className="mt-1">
+                    <div class="mt-1">
                         {{ form.password2 }}
                         {% if form.password2.errors %}
                             <p className="mt-1 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
@@ -63,17 +63,17 @@
                 <div>
                     <button
                         type="submit"
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
                         Create account
                     </button>
                 </div>
 
                 <!-- Sign In Link -->
-                <div className="text-center">
-                    <p className="text-sm text-gray-600">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
                         Already have an account?{' '}
-                        <a href="{% url 'login' %}" className="font-medium text-blue-600 hover:text-blue-500">
+                        <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500">
                             Sign in here
                         </a>
                     </p>
@@ -84,7 +84,7 @@
 </div>
 
 <style>
-    .form-control {
+    input[type="text"], input[type="password"] {
         appearance: none;
         display: block;
         width: 100%;
@@ -96,10 +96,22 @@
         font-size: 0.875rem;
         line-height: 1.25rem;
     }
-    .form-control:focus {
+    input[type="text"]:focus, input[type="password"]:focus {
         outline: none;
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .helptext {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    .errorlist {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        list-style: none;
+        padding: 0;
     }
 </style>
 {% endblock %}
