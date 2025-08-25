@@ -98,11 +98,36 @@
         /* Smooth scrolling */
         html { scroll-behavior: smooth; }
         
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+                        /* Custom scrollbar */
+                ::-webkit-scrollbar { width: 8px; }
+                ::-webkit-scrollbar-track { background: #f1f1f1; }
+                ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+                ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+                
+                /* Debug panel styles */
+                .log-entry {
+                    padding: 2px 4px;
+                    border-radius: 2px;
+                    margin-bottom: 2px;
+                    font-family: 'Monaco', 'Menlo', monospace;
+                }
+                
+                .log-debug { background: rgba(59, 130, 246, 0.2); }
+                .log-info { background: rgba(34, 197, 94, 0.2); }
+                .log-warn { background: rgba(245, 158, 11, 0.2); }
+                .log-error { background: rgba(239, 68, 68, 0.2); }
+                
+                .log-time { color: #9ca3af; margin-right: 8px; }
+                .log-level { font-weight: bold; margin-right: 8px; }
+                .log-message { color: #e5e7eb; }
+                .log-data { 
+                    background: rgba(0, 0, 0, 0.3); 
+                    padding: 4px; 
+                    border-radius: 2px; 
+                    margin-top: 4px;
+                    font-size: 10px;
+                    overflow-x: auto;
+                }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -117,19 +142,28 @@
     <!-- Main App Container -->
     <div id="app" class="min-h-screen"></div>
 
-    <!-- Toast Notifications -->
-    <div id="toast" class="fixed top-4 right-4 z-40 transform translate-x-full transition-transform duration-300">
-        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div id="toast-icon" class="w-6 h-6"></div>
-                </div>
-                <div class="ml-3">
-                    <p id="toast-message" class="text-sm font-medium text-gray-900"></p>
+                <!-- Toast Notifications -->
+            <div id="toast" class="fixed top-4 right-4 z-40 transform translate-x-full transition-transform duration-300">
+                <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div id="toast-icon" class="w-6 h-6"></div>
+                        </div>
+                        <div class="ml-3">
+                            <p id="toast-message" class="text-sm font-medium text-gray-900"></p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+
+            <!-- Debug Panel (Development Only) -->
+            <div id="debug-panel" class="fixed bottom-4 left-4 z-50 bg-black bg-opacity-90 text-white rounded-lg p-4 max-w-md max-h-64 overflow-hidden">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-semibold">🐛 Debug Log</h3>
+                    <button onclick="toggleDebugPanel()" class="text-xs bg-gray-700 px-2 py-1 rounded hover:bg-gray-600">Toggle</button>
+                </div>
+                <div id="debug-log" class="text-xs space-y-1 overflow-y-auto max-h-48"></div>
+            </div>
 
     <!-- App Script -->
     <script src="app.js"></script>

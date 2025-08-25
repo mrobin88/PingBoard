@@ -4,27 +4,142 @@
 // Clean, animated, and modern - everything in one file!
 
 // ============================================================================
-// CONFIGURATION
+// CONFIGURATION & LOGGING
 // ============================================================================
 const SUPABASE_URL = 'https://xtarwopvfxmvfdelspue.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0YXJ3b3B2ZnhtdmZkZWxzcHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNDA0MjQsImV4cCI6MjA3MTcxNjQyNH0.1V1v_-Kug_X7iDjBAwlIBc1d_Cui_zXHUtv0Qgm9gS4';
 
 // ============================================================================
+// LOGGING SYSTEM
+// ============================================================================
+const LOG_LEVELS = {
+    DEBUG: 0,
+    INFO: 1,
+    WARN: 2,
+    ERROR: 3
+};
+
+let currentLogLevel = LOG_LEVELS.DEBUG;
+
+function log(level, message, data = null) {
+    const timestamp = new Date().toISOString();
+    const levelNames = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
+    const levelName = levelNames[level];
+    
+    if (level >= currentLogLevel) {
+        const logMessage = `[${timestamp}] [${levelName}] ${message}`;
+        
+        if (data) {
+            console.group(logMessage);
+            console.log('Data:', data);
+            console.groupEnd();
+        } else {
+            console.log(logMessage);
+        }
+        
+        // Also log to page for debugging
+        if (level >= LOG_LEVELS.WARN) {
+            logToPage(levelName, message, data);
+        }
+    }
+}
+
+function logToPage(level, message, data) {
+    const debugContainer = document.getElementById('debug-log');
+    if (debugContainer) {
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-entry log-${level.toLowerCase()}`;
+        logEntry.innerHTML = `
+            <span class="log-time">${new Date().toLocaleTimeString()}</span>
+            <span class="log-level">${level}</span>
+            <span class="log-message">${message}</span>
+            ${data ? `<pre class="log-data">${JSON.stringify(data, null, 2)}</pre>` : ''}
+        `;
+        debugContainer.appendChild(logEntry);
+        debugContainer.scrollTop = debugContainer.scrollHeight;
+    }
+}
+
+// ============================================================================
+// CONFIGURATION VALIDATION
+// ============================================================================
+function validateConfiguration() {
+    log(LOG_LEVELS.INFO, '🔍 Validating app configuration...');
+    
+    const config = {
+        supabaseUrl: SUPABASE_URL,
+        supabaseKey: SUPABASE_KEY,
+        logLevel: currentLogLevel,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+    };
+    
+    log(LOG_LEVELS.DEBUG, 'Configuration details:', config);
+    
+    // Validate Supabase URL
+    if (!SUPABASE_URL || SUPABASE_URL === '') {
+        log(LOG_LEVELS.ERROR, '❌ SUPABASE_URL is missing or empty');
+        return false;
+    }
+    
+    // Validate Supabase Key
+    if (!SUPABASE_KEY || SUPABASE_KEY === '') {
+        log(LOG_LEVELS.ERROR, '❌ SUPABASE_KEY is missing or empty');
+        return false;
+    }
+    
+    // Validate URL format
+    try {
+        new URL(SUPABASE_URL);
+        log(LOG_LEVELS.INFO, '✅ SUPABASE_URL format is valid');
+    } catch (error) {
+        log(LOG_LEVELS.ERROR, '❌ SUPABASE_URL format is invalid:', error);
+        return false;
+    }
+    
+    log(LOG_LEVELS.INFO, '✅ Configuration validation passed');
+    return true;
+}
+
+// ============================================================================
 // INITIALIZE SUPABASE
 // ============================================================================
 let supabase;
-try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} catch (error) {
-    console.error('Supabase initialization failed:', error);
-    // Fallback - show error message
-    document.getElementById('loading').innerHTML = `
-        <div class="text-center">
-            <div class="text-red-500 text-6xl mb-4">❌</div>
-            <h2 class="text-xl font-semibold text-gray-700 mb-2">Connection Error</h2>
-            <p class="text-gray-600">Unable to connect to database. Please check your connection.</p>
-        </div>
-    `;
+
+async function initializeSupabase() {
+    log(LOG_LEVELS.INFO, '🚀 Initializing Supabase client...');
+    
+    // Check if Supabase library is loaded
+    if (typeof window.supabase === 'undefined') {
+        log(LOG_LEVELS.WARN, '⚠️ Supabase library not loaded yet, waiting...');
+        return false;
+    }
+    
+    try {
+        log(LOG_LEVELS.DEBUG, 'Creating Supabase client with:', {
+            url: SUPABASE_URL,
+            keyLength: SUPABASE_KEY ? SUPABASE_KEY.length : 0
+        });
+        
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Test the connection
+        log(LOG_LEVELS.INFO, '🧪 Testing Supabase connection...');
+        const { data, error } = await supabase.from('profiles').select('count').limit(1);
+        
+        if (error) {
+            log(LOG_LEVELS.ERROR, '❌ Supabase connection test failed:', error);
+            return false;
+        }
+        
+        log(LOG_LEVELS.INFO, '✅ Supabase connection successful');
+        log(LOG_LEVELS.DEBUG, 'Connection test result:', { data, error });
+        return true;
+        
+    } catch (error) {
+        log(LOG_LEVELS.ERROR, '❌ Supabase initialization failed:', error);
+        return false;
+    }
 }
 
 // ============================================================================
@@ -37,9 +152,16 @@ let currentPage = 'landing';
 // UTILITY FUNCTIONS
 // ============================================================================
 function showToast(message, type = 'success') {
+    log(LOG_LEVELS.INFO, `🍞 Showing toast: ${message} (${type})`);
+    
     const toast = document.getElementById('toast');
     const messageEl = document.getElementById('toast-message');
     const iconEl = document.getElementById('toast-icon');
+    
+    if (!toast || !messageEl || !iconEl) {
+        log(LOG_LEVELS.ERROR, '❌ Toast elements not found in DOM');
+        return;
+    }
     
     // Set message and icon
     messageEl.textContent = message;
@@ -64,6 +186,30 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+function showFatalError(title, message) {
+    log(LOG_LEVELS.ERROR, `💀 Fatal error: ${title} - ${message}`);
+    
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.innerHTML = `
+            <div class="text-center">
+                <div class="text-red-500 text-6xl mb-4">💀</div>
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">${title}</h2>
+                <p class="text-gray-600 mb-4">${message}</p>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md mx-auto text-left">
+                    <h3 class="font-semibold text-red-800 mb-2">Debug Information:</h3>
+                    <div class="text-sm text-red-700">
+                        <p><strong>URL:</strong> ${window.location.href}</p>
+                        <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+                        <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+                        <p><strong>Check Console:</strong> Press F12 for detailed logs</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
 function hideLoading() {
     const loading = document.getElementById('loading');
     loading.style.opacity = '0';
@@ -76,32 +222,54 @@ function hideLoading() {
 // MAIN APP FUNCTION
 // ============================================================================
 async function startApp() {
-    // Wait for Supabase to be available
-    if (typeof window.supabase === 'undefined') {
-        console.log('Waiting for Supabase to load...');
-        await new Promise(resolve => {
-            const checkSupabase = () => {
-                if (typeof window.supabase !== 'undefined') {
-                    resolve();
-                } else {
-                    setTimeout(checkSupabase, 100);
-                }
-            };
-            checkSupabase();
-        });
-    }
+    log(LOG_LEVELS.INFO, '🚀 Starting PingBoard application...');
     
-    // Initialize Supabase client
-    try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('Supabase initialized successfully');
-    } catch (error) {
-        console.error('Failed to initialize Supabase:', error);
-        showToast('Database connection failed', 'error');
+    // Step 1: Validate configuration
+    if (!validateConfiguration()) {
+        log(LOG_LEVELS.ERROR, '❌ Configuration validation failed, stopping app');
+        showFatalError('Configuration Error', 'Please check your Supabase credentials');
         return;
     }
     
-    await checkUser();
+    // Step 2: Wait for Supabase library to load
+    log(LOG_LEVELS.INFO, '⏳ Waiting for Supabase library to load...');
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+    
+    while (typeof window.supabase === 'undefined' && attempts < maxAttempts) {
+        attempts++;
+        log(LOG_LEVELS.DEBUG, `Attempt ${attempts}/${maxAttempts} - Supabase not loaded yet`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    if (typeof window.supabase === 'undefined') {
+        log(LOG_LEVELS.ERROR, '❌ Supabase library failed to load after 5 seconds');
+        showFatalError('Library Error', 'Supabase library failed to load. Check your internet connection.');
+        return;
+    }
+    
+    log(LOG_LEVELS.INFO, `✅ Supabase library loaded after ${attempts} attempts`);
+    
+    // Step 3: Initialize Supabase client
+    const supabaseInitialized = await initializeSupabase();
+    if (!supabaseInitialized) {
+        log(LOG_LEVELS.ERROR, '❌ Failed to initialize Supabase client');
+        showFatalError('Connection Error', 'Unable to connect to database. Please check your Supabase setup.');
+        return;
+    }
+    
+    // Step 4: Check user authentication
+    log(LOG_LEVELS.INFO, '👤 Checking user authentication...');
+    try {
+        await checkUser();
+        log(LOG_LEVELS.INFO, '✅ User authentication check completed');
+    } catch (error) {
+        log(LOG_LEVELS.ERROR, '❌ User authentication check failed:', error);
+        showToast('Authentication check failed', 'error');
+    }
+    
+    // Step 5: Hide loading and show app
+    log(LOG_LEVELS.INFO, '🎉 App initialization complete, showing landing page');
     hideLoading();
     showPage('landing');
 }
@@ -707,9 +875,47 @@ function generateSEODescription(text) {
 }
 
 async function checkUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-        currentUser = user;
+    log(LOG_LEVELS.INFO, '🔍 Checking current user authentication...');
+    
+    try {
+        if (!supabase) {
+            log(LOG_LEVELS.ERROR, '❌ Supabase client not initialized');
+            throw new Error('Supabase client not initialized');
+        }
+        
+        log(LOG_LEVELS.DEBUG, 'Calling supabase.auth.getUser()...');
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+            log(LOG_LEVELS.ERROR, '❌ Error getting user:', error);
+            throw error;
+        }
+        
+        if (user) {
+            currentUser = user;
+            log(LOG_LEVELS.INFO, '✅ User logged in:', {
+                id: user.id,
+                email: user.email,
+                createdAt: user.created_at
+            });
+        } else {
+            log(LOG_LEVELS.INFO, 'ℹ️ No user logged in');
+        }
+        
+        return user;
+        
+    } catch (error) {
+        log(LOG_LEVELS.ERROR, '❌ Error checking user:', error);
+        throw error;
+    }
+}
+
+// Debug panel toggle function
+function toggleDebugPanel() {
+    const panel = document.getElementById('debug-panel');
+    if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        log(LOG_LEVELS.INFO, `Debug panel ${panel.style.display === 'none' ? 'hidden' : 'shown'}`);
     }
 }
 
