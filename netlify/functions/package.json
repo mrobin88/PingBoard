@@ -1,0 +1,16 @@
+{
+  "name": "pingboard-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for PingBoard serverless operations",
+  "main": "pingboard.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["netlify", "functions", "serverless", "pingboard"],
+  "author": "Your Name",
+  "license": "MIT"
+}
