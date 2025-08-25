@@ -864,9 +864,9 @@ function renderPings(pings) {
                     
                     <p class="text-gray-900 mb-3 leading-relaxed">${ping.text}</p>
                     
-                    ${ping.hashtags ? `
+                    ${ping.hashtags && ping.hashtags.length > 0 ? `
                         <div class="mb-3">
-                            ${ping.hashtags.split(',').map(tag => `
+                            ${ping.hashtags.map(tag => `
                                 <span class="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full mr-2 mb-1 hover:bg-blue-200 transition-colors">
                                     #${tag.replace('#', '')}
                                 </span>
@@ -934,7 +934,8 @@ async function handleDelete(pingId) {
 // ============================================================================
 function extractHashtags(text) {
     const hashtags = text.match(/#(\w+)/g);
-    return hashtags ? hashtags.join(',') : '';
+    // Return empty array {} for database TEXT[] field, not empty string ""
+    return hashtags ? hashtags : [];
 }
 
 function generateSEODescription(text) {
