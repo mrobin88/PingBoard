@@ -1053,7 +1053,69 @@ function addDebugButtons() {
             testBtn.className = 'text-xs bg-blue-700 px-2 py-1 rounded hover:bg-blue-600 ml-2';
             testBtn.onclick = testSupabaseConnection;
             buttonContainer.appendChild(testBtn);
+            
+            const createTestUserBtn = document.createElement('button');
+            createTestUserBtn.textContent = 'Create Test User';
+            createTestUserBtn.className = 'text-xs bg-green-700 px-2 py-1 rounded hover:bg-green-600 ml-2';
+            createTestUserBtn.onclick = createTestUser;
+            buttonContainer.appendChild(createTestUserBtn);
         }
+    }
+}
+
+// Create a test user account
+async function createTestUser() {
+    log(LOG_LEVELS.INFO, '🧪 Creating test user account...');
+    
+    try {
+        const testUserData = {
+            email: 'test@pingboard.com',
+            password: 'testpassword123',
+            username: 'testuser'
+        };
+        
+        log(LOG_LEVELS.DEBUG, 'Creating test user with:', testUserData);
+        
+        const { data, error } = await supabase.auth.signUp({
+            email: testUserData.email,
+            password: testUserData.password,
+            options: { 
+                data: { username: testUserData.username },
+                emailRedirectTo: window.location.origin
+            }
+        });
+        
+        if (error) {
+            log(LOG_LEVELS.ERROR, '❌ Failed to create test user:', error);
+            showToast('Failed to create test user: ' + error.message, 'error');
+            return;
+        }
+        
+        log(LOG_LEVELS.INFO, '✅ Test user created successfully:', {
+            userId: data.user?.id,
+            email: data.user?.email
+        });
+        
+        // Show credentials in a nice format
+        const credentials = `
+🎉 Test User Created Successfully!
+
+📧 Email: ${testUserData.email}
+🔑 Password: ${testUserData.password}
+👤 Username: ${testUserData.username}
+
+You can now use these credentials to log in!
+        `;
+        
+        showToast('Test user created! Check console for credentials', 'success');
+        console.log(credentials);
+        
+        // Also log to debug panel
+        log(LOG_LEVELS.INFO, 'Test user credentials:', testUserData);
+        
+    } catch (error) {
+        log(LOG_LEVELS.ERROR, '💀 Error creating test user:', error);
+        showToast('Error creating test user: ' + error.message, 'error');
     }
 }
 
