@@ -12,7 +12,20 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ============================================================================
 // INITIALIZE SUPABASE
 // ============================================================================
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabase;
+try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (error) {
+    console.error('Supabase initialization failed:', error);
+    // Fallback - show error message
+    document.getElementById('loading').innerHTML = `
+        <div class="text-center">
+            <div class="text-red-500 text-6xl mb-4">❌</div>
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">Connection Error</h2>
+            <p class="text-gray-600">Unable to connect to database. Please check your connection.</p>
+        </div>
+    `;
+}
 
 // ============================================================================
 // APP STATE
@@ -63,6 +76,31 @@ function hideLoading() {
 // MAIN APP FUNCTION
 // ============================================================================
 async function startApp() {
+    // Wait for Supabase to be available
+    if (typeof window.supabase === 'undefined') {
+        console.log('Waiting for Supabase to load...');
+        await new Promise(resolve => {
+            const checkSupabase = () => {
+                if (typeof window.supabase !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(checkSupabase, 100);
+                }
+            };
+            checkSupabase();
+        });
+    }
+    
+    // Initialize Supabase client
+    try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('Supabase initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize Supabase:', error);
+        showToast('Database connection failed', 'error');
+        return;
+    }
+    
     await checkUser();
     hideLoading();
     showPage('landing');
