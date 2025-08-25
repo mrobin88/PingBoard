@@ -271,6 +271,7 @@ async function startApp() {
     // Step 5: Hide loading and show app
     log(LOG_LEVELS.INFO, '🎉 App initialization complete, showing landing page');
     hideLoading();
+    addDebugButtons(); // Add debug buttons
     showPage('landing');
 }
 
@@ -629,6 +630,7 @@ function showPage(page) {
 // ============================================================================
 async function handleSignup(event) {
     event.preventDefault();
+    log(LOG_LEVELS.INFO, '🚀 Starting user signup process...');
     
     const btn = document.getElementById('signupBtn');
     const originalText = btn.textContent;
@@ -641,18 +643,47 @@ async function handleSignup(event) {
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPassword').value;
     
+    log(LOG_LEVELS.DEBUG, 'Signup form data:', { username, email, passwordLength: password.length });
+    
+    // Validate input
+    if (!username || !email || !password) {
+        log(LOG_LEVELS.ERROR, '❌ Missing required fields');
+        showToast('Please fill in all fields', 'error');
+        btn.textContent = originalText;
+        btn.disabled = false;
+        return;
+    }
+    
     try {
+        log(LOG_LEVELS.INFO, '📧 Calling Supabase auth.signUp...');
+        
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            options: { data: { username } }
+            options: { 
+                data: { username },
+                emailRedirectTo: window.location.origin
+            }
         });
         
-        if (error) throw error;
+        log(LOG_LEVELS.DEBUG, 'Supabase signup response:', { data, error });
+        
+        if (error) {
+            log(LOG_LEVELS.ERROR, '❌ Supabase signup error:', error);
+            throw error;
+        }
+        
+        log(LOG_LEVELS.INFO, '✅ User signup successful:', {
+            userId: data.user?.id,
+            email: data.user?.email,
+            emailConfirmed: data.user?.email_confirmed_at
+        });
         
         showToast('Account created! Please check your email to verify.', 'success');
         setTimeout(() => showPage('login'), 2000);
+        
     } catch (error) {
+        log(LOG_LEVELS.ERROR, '💀 Signup failed with error:', error);
         showToast('Signup failed: ' + error.message, 'error');
     } finally {
         btn.textContent = originalText;
@@ -662,6 +693,7 @@ async function handleSignup(event) {
 
 async function handleLogin(event) {
     event.preventDefault();
+    log(LOG_LEVELS.INFO, '🔑 Starting user login process...');
     
     const btn = document.getElementById('loginBtn');
     const originalText = btn.textContent;
@@ -673,18 +705,54 @@ async function handleLogin(event) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
+    log(LOG_LEVELS.DEBUG, 'Login form data:', { email, passwordLength: password.length });
+    
+    // Validate input
+    if (!email || !password) {
+        log(LOG_LEVELS.ERROR, '❌ Missing email or password');
+        showToast('Please enter email and password', 'error');
+        btn.textContent = originalText;
+        btn.disabled = false;
+        return;
+    }
+    
     try {
+        log(LOG_LEVELS.INFO, '🔐 Calling Supabase auth.signInWithPassword...');
+        
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
         });
         
-        if (error) throw error;
+        log(LOG_LEVELS.DEBUG, 'Supabase login response:', { 
+            hasUser: !!data.user, 
+            userId: data.user?.id,
+            email: data.user?.email,
+            error 
+        });
         
-        currentUser = data.user;
-        showToast('Welcome back!', 'success');
-        showPage('app');
+        if (error) {
+            log(LOG_LEVELS.ERROR, '❌ Supabase login error:', error);
+            throw error;
+        }
+        
+        if (data.user) {
+            currentUser = data.user;
+            log(LOG_LEVELS.INFO, '✅ User login successful:', {
+                userId: data.user.id,
+                email: data.user.email,
+                emailConfirmed: data.user.email_confirmed_at
+            });
+            
+            showToast('Welcome back!', 'success');
+            showPage('app');
+        } else {
+            log(LOG_LEVELS.ERROR, '❌ No user data returned from login');
+            showToast('Login failed: No user data returned', 'error');
+        }
+        
     } catch (error) {
+        log(LOG_LEVELS.ERROR, '💀 Login failed with error:', error);
         showToast('Login failed: ' + error.message, 'error');
     } finally {
         btn.textContent = originalText;
@@ -883,30 +951,41 @@ async function checkUser() {
             throw new Error('Supabase client not initialized');
         }
         
-        log(LOG_LEVELS.DEBUG, 'Calling supabase.auth.getUser()...');
-        const { data: { user }, error } = await supabase.auth.getUser();
+        // First check if there's an active session
+        log(LOG_LEVELS.DEBUG, 'Checking for active session...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-            log(LOG_LEVELS.ERROR, '❌ Error getting user:', error);
-            throw error;
+        if (sessionError) {
+            log(LOG_LEVELS.WARN, '⚠️ Session check error (this is normal for new users):', sessionError);
         }
         
-        if (user) {
-            currentUser = user;
-            log(LOG_LEVELS.INFO, '✅ User logged in:', {
-                id: user.id,
-                email: user.email,
-                createdAt: user.created_at
+        if (session && session.user) {
+            // User has an active session
+            currentUser = session.user;
+            log(LOG_LEVELS.INFO, '✅ User logged in via session:', {
+                id: session.user.id,
+                email: session.user.email,
+                emailConfirmed: session.user.email_confirmed_at
             });
+            return session.user;
         } else {
-            log(LOG_LEVELS.INFO, 'ℹ️ No user logged in');
+            // No active session - this is normal for new visitors
+            log(LOG_LEVELS.INFO, 'ℹ️ No active session - user is not logged in (this is normal)');
+            currentUser = null;
+            return null;
         }
-        
-        return user;
         
     } catch (error) {
-        log(LOG_LEVELS.ERROR, '❌ Error checking user:', error);
-        throw error;
+        // Don't throw errors for missing sessions - this is expected behavior
+        if (error.message && error.message.includes('Auth session missing')) {
+            log(LOG_LEVELS.INFO, 'ℹ️ No auth session found (user not logged in)');
+            currentUser = null;
+            return null;
+        }
+        
+        log(LOG_LEVELS.ERROR, '❌ Unexpected error checking user:', error);
+        currentUser = null;
+        return null;
     }
 }
 
@@ -916,6 +995,65 @@ function toggleDebugPanel() {
     if (panel) {
         panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
         log(LOG_LEVELS.INFO, `Debug panel ${panel.style.display === 'none' ? 'hidden' : 'shown'}`);
+    }
+}
+
+// Test Supabase connection and auth state
+async function testSupabaseConnection() {
+    log(LOG_LEVELS.INFO, '🧪 Testing Supabase connection and auth state...');
+    
+    try {
+        // Test basic connection
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('count')
+            .limit(1);
+        
+        log(LOG_LEVELS.DEBUG, 'Profiles table test:', { profiles, profilesError });
+        
+        // Test auth state
+        const { data: { session: authSession }, error: authError } = await supabase.auth.getSession();
+        log(LOG_LEVELS.DEBUG, 'Current auth state:', { 
+            hasSession: !!authSession, 
+            user: authSession?.user,
+            authError 
+        });
+        
+        // Test session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        log(LOG_LEVELS.DEBUG, 'Current session:', { 
+            hasSession: !!session, 
+            sessionError,
+            userId: session?.user?.id 
+        });
+        
+        log(LOG_LEVELS.INFO, '✅ Supabase connection test completed');
+        
+        return {
+            profilesWorking: !profilesError,
+            authWorking: !authError,
+            sessionWorking: !sessionError,
+            currentUser: authSession?.user
+        };
+        
+    } catch (error) {
+        log(LOG_LEVELS.ERROR, '❌ Supabase connection test failed:', error);
+        return { error: error.message };
+    }
+}
+
+// Add test button to debug panel
+function addDebugButtons() {
+    const debugPanel = document.getElementById('debug-panel');
+    if (debugPanel) {
+        const buttonContainer = debugPanel.querySelector('.flex.justify-between');
+        if (buttonContainer) {
+            const testBtn = document.createElement('button');
+            testBtn.textContent = 'Test DB';
+            testBtn.className = 'text-xs bg-blue-700 px-2 py-1 rounded hover:bg-blue-600 ml-2';
+            testBtn.onclick = testSupabaseConnection;
+            buttonContainer.appendChild(testBtn);
+        }
     }
 }
 
